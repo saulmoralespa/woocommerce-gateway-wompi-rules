@@ -78,12 +78,11 @@ class Gateway_Wompi_Rules_Plugin
     protected function _run()
     {
 
-        add_action( 'woocommerce_review_order_before_order_total', 'percentage_increase_total_wompi' );
-        add_action( 'woocommerce_before_cart_totals', 'percentage_increase_total_wompi' );
+        add_action( 'woocommerce_cart_calculate_fees', 'percentage_increase_total_wompi',  20, 1 );
         add_action( 'wp_footer', 'wompi_custom_checkout_jqscript' );
         add_filter( 'wc_wompi_settings', 'wc_wompi_settings_filter', 10, 1 );
 
-        function percentage_increase_total_wompi() {
+        function percentage_increase_total_wompi($cart_object) {
 
             if ( is_admin() && ! defined( 'DOING_AJAX' ) )
                 return;
@@ -92,10 +91,14 @@ class Gateway_Wompi_Rules_Plugin
 
             $percent =  empty(WC_Wompi::$settings['percentage_increase']) ? 0 : WC_Wompi::$settings['percentage_increase'];
 
+            $cart_total = $cart_object->subtotal_ex_tax;
+
+            $increase =  $cart_total / 100 * $percent;
+
             $chosen_payment_method = WC()->session->get('chosen_payment_method');  //Get the selected payment method
 
             if( $payment_method == $chosen_payment_method )
-                WC()->cart->total += WC()->cart->total / 100 * $percent;
+                $cart_object->add_fee( '', +$increase, false );
             return;
         }
 
@@ -108,10 +111,12 @@ class Gateway_Wompi_Rules_Plugin
                     let paymentNew = '';
                     $('form.checkout').on('change', 'input[name="payment_method"]', function(){
                         let paymentActual = $('form[name="checkout"] input[name="payment_method"]:checked').val();
+                        alert('init ' + $('form[name="checkout"] input[name="payment_method"]:checked').val());
                        if (paymentActual !== paymentNew){
                            $(document.body).trigger('update_checkout');
                        }
                         paymentNew = $('form[name="checkout"] input[name="payment_method"]:checked').val();
+                        alert('end' + $('form[name="checkout"] input[name="payment_method"]:checked').val());
                     });
                 });
             </script>
@@ -125,7 +130,7 @@ class Gateway_Wompi_Rules_Plugin
                 'type'        => 'number',
                 'description' => __( 'El porcentaje de incremento sobre el total de la orden, (se aplica cuando se elige Wompi como medio de pago)', 'woocommerce-gateway-wompi' ),
                 'default'     => '0',
-                'desc_tip'    => true,
+                'desc_tip'    => true
             ];
             return $settings;
         }
