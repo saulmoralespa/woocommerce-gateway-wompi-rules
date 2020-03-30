@@ -111,12 +111,10 @@ class Gateway_Wompi_Rules_Plugin
                     let paymentNew = '';
                     $('form.checkout').on('change', 'input[name="payment_method"]', function(){
                         let paymentActual = $('form[name="checkout"] input[name="payment_method"]:checked').val();
-                        alert('init ' + $('form[name="checkout"] input[name="payment_method"]:checked').val());
                        if (paymentActual !== paymentNew){
                            $(document.body).trigger('update_checkout');
                        }
                         paymentNew = $('form[name="checkout"] input[name="payment_method"]:checked').val();
-                        alert('end' + $('form[name="checkout"] input[name="payment_method"]:checked').val());
                     });
                 });
             </script>
